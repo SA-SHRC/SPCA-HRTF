@@ -2,53 +2,62 @@
 clear;
 
 %% LOAD DATA
-load(strcat('../net data/basis_train_ori_front.mat'));
-load(strcat('../net data/basis_train_ori_back.mat'));
-load(strcat('../net data/hav_train_ori_front.mat'));
-load(strcat('../net data/hav_train_ori_back.mat'));
-load(strcat('../net data/basis_test_ori_front.mat'));
-load(strcat('../net data/basis_test_ori_back.mat'));
-load(strcat('../net data/hav_test_ori_front.mat'));
-load(strcat('../net data/hav_test_ori_back.mat'));
-load(strcat('../net data/total_l.mat'));
-load(strcat('../net data/total_r.mat'));
+load('./data/basis_train_front.mat');
+load('./data/basis_train_back.mat');
+load('./data/hav_train_front.mat');
+load('./data/hav_train_back.mat');
+load('./data/basis_test_front.mat');
+load('./data/basis_test_back.mat');
+load('./data/hav_test_front.mat');
+load('./data/hav_test_back.mat');
+load('./data/total_l.mat');
+load('./data/total_r.mat');
 
-% load('../net data/itd_test_front_total.mat');
-% load('../net data/itd_test_back_total.mat');
-% load('../net data/itd_train_front_total.mat');
-% load('../net data/itd_train_back_total.mat');
-load('../net data/itd_Subs_front_total.mat');
-load('../net data/itd_Subs_back_total.mat');
+load('./data/itd_test_front_total.mat');
+load('./data/itd_test_back_total.mat');
+load('./data/itd_train_front_total.mat');
+load('./data/itd_train_back_total.mat');
 
 num = 200; % 主成分个数
-
-test_num = 28;
-% coe_test = zeros(num, 200, test_num);
-coe_test_l = zeros(num, 200, test_num/2);
-coe_test_r = zeros(num, 200, test_num/2);
+train_num =60;
+coe_train = zeros(num, 200, train_num);
 
 for n = 1 : 101
-    load(strcat('../coeff/coeff_f', num2str(n), 'subject_test_out.mat'));
-    coe_test_l(:, n, :) = reshape(subject_test_out(1:test_num/2, :)', [num 1 test_num/2]);
-    coe_test_r(:, n, :) = reshape(subject_test_out(1+test_num/2:end, :)', [num 1 test_num/2]);
+    load(strcat('./data/coeff/coeff_f', num2str(n), '_train_out.mat'));
+    coe_train(:, n, :) = reshape(train_out', [num 1 train_num]);
 end
 
-% coe_test_l = coe_test(:, :, 1:test_num/2);
-% coe_test_r = coe_test(:, :, (test_num/2+1):test_num);
+coe_train_l = coe_train(:, :, 1:train_num/2);
+coe_train_r = coe_train(:, :, (train_num/2+1):train_num);
+
+for n = 102 : 200
+    coe_train_l(:, n, :) = coe_train_l(:, 202-n, :);
+    coe_train_r(:, n, :) = coe_train_r(:, 202-n, :);
+end
+
+
+test_num = 14;
+coe_test = zeros(num, 200, test_num);
+
+for n = 1 : 101
+    load(strcat('./data/coeff/coeff_f', num2str(n), '_test_out.mat'));
+    coe_test(:, n, :) = reshape(test_out', [num 1 test_num]);
+end
+
+coe_test_l = coe_test(:, :, 1:test_num/2);
+coe_test_r = coe_test(:, :, (test_num/2+1):test_num);
 
 for n = 102 : 200
     coe_test_l(:, n, :) = coe_test_l(:, 202-n, :);
     coe_test_r(:, n, :) = coe_test_r(:, 202-n, :);
 end
 % 合并系数
-coe_l = [permute(coe_test_l, [3, 1, 2])];
+coe_l = [permute(coe_train_l, [3, 1, 2]); permute(coe_test_l, [3, 1, 2])];
 coe_l = permute(coe_l, [2, 3, 1]);
-coe_r = [permute(coe_test_r, [3, 1, 2])];
+coe_r = [permute(coe_train_r, [3, 1, 2]); permute(coe_test_r, [3, 1, 2])];
 coe_r = permute(coe_r, [2, 3, 1]);
 
-subjectName ={'CGF','CJF','GZS','LJ','LR','NYD','PC','QY','SMJ','ST','WYW','LX','HYK','GS'};
-total_num = length(subjectName);
-
+total_num = 37;
 
 %% Reconstruct HRTF
 
@@ -61,12 +70,12 @@ trainingdata = [trainSet, validSet];
 totalSet = [trainingdata, testSet];
 [~, inds] = sort(totalSet);
 % 合并基函数
-basis_front = [basis_train_ori_front; basis_test_ori_front];
-basis_back = [basis_train_ori_back; basis_test_ori_back];
-hav_front = [hav_train_ori_front; hav_test_ori_front];
-hav_back = [hav_train_ori_back; hav_test_ori_back];
+basis_front = [basis_train_front; basis_test_front];
+basis_back = [basis_train_back; basis_test_back];
+hav_front = [hav_train_front; hav_test_front];
+hav_back = [hav_train_back; hav_test_back];
 % 调整基函数排序为 1~1250
-basis_front = basis_front(inds, :); % 左耳水平角-80～80,右耳80～-80（不同坐标系？），下同
+basis_front = basis_front(inds, :); % 左耳水平角-80～80,右耳80～-80，下同
 basis_back = basis_back(inds, :);
 hav_front = hav_front(inds, :);
 hav_back = hav_back(inds, :);
@@ -95,14 +104,10 @@ for i = 1 : total_num
 end
 
 %% 重建hrir
-% itd_front = [itd_train_front; itd_test_front];
-% itd_back = [itd_train_back; itd_test_back];
-% itd_front = reshape(itd_front, [625, total_num]); % 方向先变仰角后水平角，301～325为中平面
-% itd_back = reshape(itd_back, [625, total_num]);
-% dirNum = 1250;
-itd_front = reshape(itd_test_front, [625, total_num]);
-itd_back = reshape(itd_test_back, [625, total_num]);
-% itd = reshape([itd_front; itd_back], [dirNum, total_num]);
+itd_front = [itd_train_front; itd_test_front];
+itd_back = [itd_train_back; itd_test_back];
+itd_front = reshape(itd_front, [625, total_num]); % 方向先变仰角后水平角，301～325为中平面
+itd_back = reshape(itd_back, [625, total_num]);
 hrir_front_l = zeros(total_num, 200, 625);
 hrir_front_r = zeros(total_num, 200, 625);
 hrir_back_l = zeros(total_num, 200, 625);
@@ -119,7 +124,7 @@ for i = 1:total_num
     sub_back_r = permute(reshape(squeeze(hrir_back_r(i, :, :))', [25, 25, 200]), [2, 1, 3]);
     hrir_l = [sub_front_l, sub_back_l]; % 拼接为25×50×200标准存储顺序
     hrir_r = [sub_front_r, sub_back_r];
-    outdir = ['../net data/', subjectName{i}, '/'];
+    outdir = ['../results/matlab/hrir/', num2str(i), '/'];
     if(~isdir(outdir));mkdir(outdir);end
-    save([outdir, 'hrir_Subs_spca.mat'], 'hrir_l', 'hrir_r');
+    save([outdir, 'hrir_predict_spca.mat'], 'hrir_l', 'hrir_r');
 end

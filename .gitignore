@@ -1,0 +1,24 @@
+# Ignore Matlab files
+*.m~
+*.asv
+*.mexa64
+*.mexglx
+*.mexmaci64
+*.mexmaci
+*.mexmac
+*.mexw32
+*.mexw64
+*.oct
+*.octave
+*.octaverc
+*.mex
+*.mexmac
+*.mexmaci
+*.mexmaci64
+*.mexglx
+*.mexa64
+*.mexw32
+*.mexw64
+*.mat
+*.fig
+*.p

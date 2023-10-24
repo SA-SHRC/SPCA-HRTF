@@ -2,8 +2,8 @@
 clear;
 
 %% DATA
-load(strcat('../net data/hav_l.mat'));
-load(strcat('../net data/hav_r.mat'));
+load(strcat('../data/hav_l.mat'));
+load(strcat('../data/hav_r.mat'));
 
 hav_l_front = zeros(625,1);
 hav_r_front = zeros(625,1);
@@ -63,10 +63,10 @@ hav_test_ori_front = output_front (testSet);
 hav_train_ori_back = output_back ([trainSet, validSet]);
 hav_test_ori_back = output_back (testSet);
 
-save(strcat('../net data/hav_test_ori_front.mat'),'hav_test_ori_front')
-save(strcat('../net data/hav_test_ori_back.mat'),'hav_test_ori_back')
-save(strcat('../net data/hav_train_ori_front.mat'),'hav_train_ori_front')
-save(strcat('../net data/hav_train_ori_back.mat'),'hav_train_ori_back')
+save(strcat('../data/hav_test_ori_front.mat'),'hav_test_ori_front')
+save(strcat('../data/hav_test_ori_back.mat'),'hav_test_ori_back')
+save(strcat('../data/hav_train_ori_front.mat'),'hav_train_ori_front')
+save(strcat('../data/hav_train_ori_back.mat'),'hav_train_ori_back')
 
 % normalize
 [train_in_front, mu_front, sigma_front] = zscore(train_in_front);
@@ -102,7 +102,7 @@ nn_front.testing = 0;
 
 hav_test_front=nn_out_front.a{end};
 hav_test_front = hav_test_front.*repmat(sigma_front_out, [320 1])+repmat(mu_front_out, [320 1]);
-save(strcat('../net data/hav_test_front.mat'),'hav_test_front')
+save(strcat('../data/hav_test_front.mat'),'hav_test_front')
 
 % back
 nn_back.testing = 1;
@@ -112,7 +112,7 @@ nn_back.testing = 0;
 hav_test_back=nn_out_back.a{end};
 hav_test_back = hav_test_back.*repmat(sigma_back_out, [320 1])+repmat(mu_back_out, [320 1]);
 
-save(strcat('../net data/hav_test_back.mat'),'hav_test_back')
+save(strcat('../data/hav_test_back.mat'),'hav_test_back')
 
 %% Testing of training data
 % front
@@ -122,7 +122,7 @@ nn_front.testing = 0;
 
 hav_train_front=nn_train_front.a{end};
 hav_train_front = hav_train_front.*repmat(sigma_front_out, [930 1])+repmat(mu_front_out, [930 1]);
-save(strcat('../net data/hav_train_front.mat'),'hav_train_front')
+save(strcat('../data/hav_train_front.mat'),'hav_train_front')
 
 % back
 nn_back.testing = 1;
@@ -132,19 +132,19 @@ nn_back.testing = 0;
 hav_train_back=nn_train_back.a{end};
 hav_train_back = hav_train_back.*repmat(sigma_back_out, [930 1])+repmat(mu_back_out, [930 1]);
 
-save(strcat('../net data/hav_train_back.mat'),'hav_train_back')
+save(strcat('../data/hav_train_back.mat'),'hav_train_back')
 
-%% Testing of GUI data
-GUI_training = [hav_l(609), -90, 0; hav_l(609), 90, 0; hav_l(609), -90, 22.5; hav_l(609), 90, 22.5; hav_l(609), -90, 45; hav_l(609), 90, 45; hav_r(609), -90, 0; hav_r(609), 90, 0; hav_r(609), -90, 22.5; hav_r(609), 90, 22.5; hav_r(609), -90, 45; hav_r(609), 90, 45];
-
-% normalize
-GUI_training = normalize(GUI_training, mu_front, sigma_front);
-
-% front
-nn_front.testing = 1;
-nn_GUI_training = nnff(nn_front, GUI_training, zeros(size(GUI_training,1), nn_front.size(end)));
-nn_front.testing = 0;
-
-GUI_hav_front=nn_GUI_training.a{end};
-GUI_hav_front = GUI_hav_front.*repmat(sigma_front_out, [size(GUI_training,1) 1])+repmat(mu_front_out, [size(GUI_training,1) 1]);
-save(strcat('../net data/GUI_hav_front.mat'),'GUI_hav_front')
+% %% Testing of GUI data
+% GUI_training = [hav_l(609), -90, 0; hav_l(609), 90, 0; hav_l(609), -90, 22.5; hav_l(609), 90, 22.5; hav_l(609), -90, 45; hav_l(609), 90, 45; hav_r(609), -90, 0; hav_r(609), 90, 0; hav_r(609), -90, 22.5; hav_r(609), 90, 22.5; hav_r(609), -90, 45; hav_r(609), 90, 45];
+% 
+% % normalize
+% GUI_training = normalize(GUI_training, mu_front, sigma_front);
+% 
+% % front
+% nn_front.testing = 1;
+% nn_GUI_training = nnff(nn_front, GUI_training, zeros(size(GUI_training,1), nn_front.size(end)));
+% nn_front.testing = 0;
+% 
+% GUI_hav_front=nn_GUI_training.a{end};
+% GUI_hav_front = GUI_hav_front.*repmat(sigma_front_out, [size(GUI_training,1) 1])+repmat(mu_front_out, [size(GUI_training,1) 1]);
+% save(strcat('../data/GUI_hav_front.mat'),'GUI_hav_front')

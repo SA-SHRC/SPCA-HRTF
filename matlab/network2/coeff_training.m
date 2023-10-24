@@ -4,8 +4,8 @@ function coeff_training (fn)
 % fn = 67;
 
 %% Output data
-load(strcat('../net data/pc_l.mat'));
-load(strcat('../net data/pc_r.mat'));
+load(strcat('../data/pc_l.mat'));
+load(strcat('../data/pc_r.mat'));
 
 num = 200; % 主成分个数
 p_l = reshape(pc_l(fn ,: ,: ),[num 45])';
@@ -20,18 +20,21 @@ p_r_train = p_r(1:30, :);
 p_l_test = p_l(31:37, :);
 p_r_test = p_r(31:37, :);
 
-save(strcat('../net data/coeff_f', num2str(fn), '_train_ori_l.mat'),'p_l_train')
-save(strcat('../net data/coeff_f', num2str(fn), 'train_ori_r.mat'),'p_r_train')
-save(strcat('../net data/coeff_f', num2str(fn), 'test_ori_l.mat'),'p_l_test')
-save(strcat('../net data/coeff_f', num2str(fn), 'test_ori_r.mat'),'p_r_test')
+if(~isdir('../data/coeff'))
+    mkdir('../data/coeff');
+end
+save(strcat('../data/coeff/coeff_f', num2str(fn), '_train_ori_l.mat'),'p_l_train')
+save(strcat('../data/coeff/coeff_f', num2str(fn), '_train_ori_r.mat'),'p_r_train')
+save(strcat('../data/coeff/coeff_f', num2str(fn), '_test_ori_l.mat'),'p_l_test')
+save(strcat('../data/coeff/coeff_f', num2str(fn), '_test_ori_r.mat'),'p_r_test')
 
 %% Input data
 
 % Anthropometric parameters of train data and test data
-load(strcat('../training data/inl_training.mat'));
-load(strcat('../training data/inr_training.mat'));
-load(strcat('../test data/inl_test.mat'));
-load(strcat('../test data/inr_test.mat'));
+load(strcat('../../data/training data/inl_training.mat'));
+load(strcat('../../data/training data/inr_training.mat'));
+load(strcat('../../data/test data/inl_test.mat'));
+load(strcat('../../data/test data/inr_test.mat'));
 
 % train_in = [inl_training; inl_test(1:5, :); inr_training; inr_test(3:7, :)];
 % train_out = [p_l_train; p_r_train];
@@ -65,7 +68,7 @@ nn.testing = 0;
 test_out=nn_out.a{end};
 test_out = test_out.*repmat(sigma_out, [14 1])+repmat(mu_out, [14 1]);
 
-save(strcat('../net data/coeff_f', num2str(fn), 'test_out.mat'),'test_out')
+save(strcat('../data/coeff/coeff_f', num2str(fn), '_test_out.mat'),'test_out')
 
 %% testing of training data
 nn.testing = 1;
@@ -75,12 +78,12 @@ nn.testing = 0;
 train_out=nn_out_train.a{end};
 train_out = train_out.*repmat(sigma_out, [60 1])+repmat(mu_out, [60 1]);
 
-save(strcat('../net data/coeff_f', num2str(fn), 'train_out.mat'),'train_out')
+save(strcat('../data/coeff/coeff_f', num2str(fn), '_train_out.mat'),'train_out')
 
 %% testing of subjective experiment
 % subjectName ={'CGF','CJF','GZS','LJ','LR','NYD','PC','QY','SMJ','ST','WYW','LX','HYK','GS'};
-load(strcat('../net data/newsubject_l.mat'));
-load(strcat('../net data/newsubject_r.mat'));
+load(strcat('../../data/net data/newsubject_l.mat'));
+load(strcat('../../data/net data/newsubject_r.mat'));
 subject_test_in = [subject_l; subject_r];
 % subject_test_in = [inl_training(30, :); inl_training(30, :)];
 % [14.0126185048060, 22.0902436700302,19.9756989602717];
@@ -95,4 +98,4 @@ nn.testing = 0;
 subject_test_out=nn_out_sub.a{end};
 subject_test_out = subject_test_out.*repmat(sigma_out, [size(subject_test_in,1) 1])+repmat(mu_out, [size(subject_test_in,1) 1]);
 
-save(strcat('../coeff/coeff_f', num2str(fn), 'subject_test_out.mat'),'subject_test_out')
+save(strcat('../data/coeff/coeff_f', num2str(fn), '_subject_test_out.mat'),'subject_test_out')

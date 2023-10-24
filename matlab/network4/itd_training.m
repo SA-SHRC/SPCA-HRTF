@@ -1,9 +1,8 @@
  
 clear;
-clc;
 
 %% Output data
-load(strcat('../net data/itd.mat'));
+load(strcat('../data/itd.mat'));
 itd_train_front = zeros(18750,1);
 itd_train_back = zeros(18750,1);
 
@@ -54,26 +53,27 @@ eleva_front = eleva(1:25);
 eleva_back = eleva(26:50);
 train_ele_front = repmat(eleva_front', [750 1]);
 train_ele_back = repmat(eleva_back', [750 1]);
-test_ele_front = repmat(eleva_front', [350 1]);
-test_ele_back = repmat(eleva_back', [350 1]);
 for c = 1 : 25
     azi(((c-1)*25+1) : ((c-1)*25+25)) = repmat(azimu(c), [25 1]);
 end
 
 train_azi = repmat(azi', [30 1]);
-test_azi = repmat(azi', [14 1]);
 
 % Anthropometric parameters of train data
-load(strcat('../training data/inl_training_itd.mat'));
+load(strcat('../../data/training data/inl_training_itd.mat'));
 
 for m = 1 : 30
     anthro_train(((m-1)*625+1) : ((m-1)*625+625), :) = repmat(inl_training_itd(m, 1:3), [625 1]);
 end
 
 % Anthropometric parameters of test data
-load(strcat('../test data/inl_test.mat'));
-load(strcat('../net data/inl_Subs.mat'));
-for l = 1 : 14
+load(strcat('../../data/test data/inl_test.mat'));
+% load(strcat('../../data/net data/inl_Subs.mat'));
+ntest = size(inl_test, 1);
+test_ele_front = repmat(eleva_front', [ntest*25 1]);
+test_ele_back = repmat(eleva_back', [ntest*25 1]);
+test_azi = repmat(azi', [ntest 1]);
+for l = 1 : ntest
     anthro_test(((l-1)*625+1) : ((l-1)*625+625), :) = repmat(inl_test(l, 1:3), [625 1]);
 end
 
@@ -98,7 +98,7 @@ end
 for i = 1 : 30
     traindata = [traindata, (i-1)*625+validSet];
 end
-for i = 1 : 7
+for i = 1 : ntest
     testdata = [testdata, (i-1)*625+testSet];
 end
 
@@ -112,10 +112,10 @@ itd_test_ori_front = itd_test_front (testdata);
 itd_train_ori_back = itd_train_back (traindata);
 itd_test_ori_back = itd_test_back (testdata);
 
-save(strcat('../net data/itd_test_ori_front.mat'),'itd_test_ori_front')
-save(strcat('../net data/itd_test_ori_back.mat'),'itd_test_ori_back')
-save(strcat('../net data/itd_train_ori_front.mat'),'itd_train_ori_front')
-save(strcat('../net data/itd_train_ori_back.mat'),'itd_train_ori_back')
+save(strcat('../data/itd_test_ori_front.mat'),'itd_test_ori_front')
+save(strcat('../data/itd_test_ori_back.mat'),'itd_test_ori_back')
+save(strcat('../data/itd_train_ori_front.mat'),'itd_train_ori_front')
+save(strcat('../data/itd_train_ori_back.mat'),'itd_train_ori_back')
 
 % normalize
 [train_in_front, mu_front, sigma_front] = zscore(train_in_front);
@@ -134,7 +134,7 @@ opts_front.numepochs = 20000;   %  Number of full sweeps through data
 opts_front.batchsize = 5;  %  Take a mean gradient step over this many samples
 opts_front.plot = 0; %  enable plotting
 [nn_front, L_front] = nntrain(nn_front, train_in_front(1:11100, :), itd_train_ori_front(1:11100), opts_front, train_in_front(11101:13950, :), itd_train_ori_front(11101:13950), 500);
-save('../net data/network_itd_front_final.mat', 'nn_front', 'L_front');
+save('../data/network_itd_front_final.mat', 'nn_front', 'L_front');
 
 % back
 rand('state',0)
@@ -143,7 +143,7 @@ opts_back.numepochs = 20000;   %  Number of full sweeps through data
 opts_back.batchsize = 5;  %  Take a mean gradient step over this many samples
 opts_back.plot = 0; %  enable plotting
 [nn_back, L_back] = nntrain(nn_back, train_in_back(1:11100, :), itd_train_ori_back(1:11100), opts_back, train_in_back(11101:13950, :), itd_train_ori_back(11101:13950), 500);
-save('../net data/network_itd_back_final.mat', 'nn_back', 'L_back');
+save('../data/network_itd_back_final.mat', 'nn_back', 'L_back');
 
 %% Testing
 train_in_front = input_front;
@@ -166,18 +166,18 @@ test_in_back = normalize(test_in_back, mu_back, sigma_back);
 [itd_train_ori_back, mu_back_out, sigma_back_out] = zscore(itd_train_ori_back);
 
 % front
-load('../net data/network_itd_front_final.mat');
+load('../data/network_itd_front_final.mat');
 nn_front.testing = 1;
 nn_out_front = nnff(nn_front, test_in_front, zeros(size(test_in_front,1), nn_front.size(end)));
 nn_front.testing = 0;
 
 itd_test_front=nn_out_front.a{end};
 itd_test_front = itd_test_front.*repmat(sigma_front_out, [size(itd_test_front,1) 1])+repmat(mu_front_out, [size(itd_test_front,1) 1]);
-% save(strcat('../net data/itd_test_front_total.mat'),'itd_test_front');
-save(strcat('../net data/itd_Subs_front_total.mat'),'itd_test_front');
+save(strcat('../data/itd_test_front_total.mat'),'itd_test_front');
+% save(strcat('../data/itd_Subs_front_total.mat'),'itd_test_front');
 
 % back
-load('../net data/network_itd_back_final.mat');
+load('../data/network_itd_back_final.mat');
 nn_back.testing = 1;
 nn_out_back = nnff(nn_back, test_in_back, zeros(size(test_in_back,1), nn_back.size(end)));
 nn_back.testing = 0;
@@ -185,8 +185,8 @@ nn_back.testing = 0;
 itd_test_back=nn_out_back.a{end};
 itd_test_back = itd_test_back.*repmat(sigma_back_out, [size(itd_test_back,1) 1])+repmat(mu_back_out, [size(itd_test_back,1) 1]);
 
-% save(strcat('../net data/itd_test_back_total.mat'),'itd_test_back');
-save(strcat('../net data/itd_Subs_back_total.mat'),'itd_test_back');
+save(strcat('../data/itd_test_back_total.mat'),'itd_test_back');
+% save(strcat('../data/itd_Subs_back_total.mat'),'itd_test_back');
 disp('test done');
 
 %% Testing of training data
@@ -197,7 +197,7 @@ nn_front.testing = 0;
 
 itd_train_front=nn_train_front.a{end};
 itd_train_front = itd_train_front.*repmat(sigma_front_out, [18750 1])+repmat(mu_front_out, [18750 1]);
-save(strcat('../net data/itd_train_front_total.mat'),'itd_train_front')
+save(strcat('../data/itd_train_front_total.mat'),'itd_train_front')
 
 % back
 nn_back.testing = 1;
@@ -207,4 +207,4 @@ nn_back.testing = 0;
 itd_train_back=nn_train_back.a{end};
 itd_train_back = itd_train_back.*repmat(sigma_back_out, [18750 1])+repmat(mu_back_out, [18750 1]);
 
-save(strcat('../net data/itd_train_back_total.mat'),'itd_train_back')
+save(strcat('../data/itd_train_back_total.mat'),'itd_train_back')

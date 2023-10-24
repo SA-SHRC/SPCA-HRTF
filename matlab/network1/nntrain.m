@@ -63,17 +63,24 @@ for i = 1 : numepochs
 
     if opts.validation == 1
         loss = nneval(nn, loss, train_x, train_y, val_x, val_y);
-        str_perf = sprintf('; Full-batch train mse = %f, val mse = %f', loss.train.e(end), loss.val.e(end));
+        str_perf = sprintf('; Full-batch train mse = %.2f, val mse = %.2f', loss.train.e(end), loss.val.e(end));
     else
         loss = nneval(nn, loss, train_x, train_y);
-        str_perf = sprintf('; Full-batch train err = %f', loss.train.e(end));
+        str_perf = sprintf('; Full-batch train err = %.2f', loss.train.e(end));
     end
     if ishandle(fhandle)
         nnupdatefigures(nn, fhandle, loss, opts, i);
     end
         
-%     disp(['epoch ' num2str(i) '/' num2str(opts.numepochs) '. Took ' num2str(t) ' seconds' '. Mini-batch mean squared error on training set is ' num2str(mean(L((n-numbatches):(n-1)))) str_perf]);
-
+    echo = sprintf('epoch %*d/%d. Took %.4f seconds. Mini-batch mean squared error on training set is %.2f%s', length(num2str(opts.numepochs)), i, opts.numepochs, t, mean(L((n-numbatches):(n-1))), str_perf);
+    if(i>1 && mod(i-1,100)~=0)
+        fprintf(repmat('\b',1,length(prev_echo)));
+    else
+        fprintf('\n');
+    end
+    fprintf(echo);
+    prev_echo = echo;
+    
     if opts.validation == 1
         if loss.val.e(end) < minMSE
             minMSE = loss.val.e(end);
@@ -83,13 +90,12 @@ for i = 1 : numepochs
             count = count +1;
         end
         if count == MAX
-            optimal_loss = nneval(optimal_nn, loss, train_x, train_y, val_x, val_y);
-            Optimal = sprintf('Optimal full-batch train mse = %f, val mse = %f', optimal_loss.train.e(end), optimal_loss.val.e(end))
             break;
         end
     end
     
     nn.learningRate = nn.learningRate * nn.scaling_learningRate;
 end
+fprintf('\n');
 end
 
