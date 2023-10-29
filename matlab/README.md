@@ -41,5 +41,3 @@ Reconstructing HRIRs for the train and test dataset using the ground truth.
 
 ### reconsSubs.m
 Reconstructing HRIRs for the train and test dataset for subjects in the subjective experiments.
-
-### Codes for data processing are preparing.
